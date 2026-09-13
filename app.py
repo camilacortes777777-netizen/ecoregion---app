@@ -416,9 +416,12 @@ with tab_encuesta:
     st.markdown("### 📊 Validación de Usabilidad con Usuarios Reales")
     st.caption("Las respuestas registradas se guardan en tiempo real en nuestra base de datos de Google Sheets.")
 
+    # PEGA AQUÍ TU ENLACE REAL DE GOOGLE SHEETS
+    URL_SHEET = "https://docs.google.com/spreadsheets/d/17rVqZExih7E-dhfE3Vg_4tNqlTx5gCg5azDvzerys94/edit?usp=sharing"
+
     col_e1, col_e2 = st.columns([1, 1], gap="medium")
 
-    # Conexión con Google Sheets
+    # Inicializar conexión
     conn = st.connection("gsheets", type=GSheetsConnection)
 
     with col_e1:
@@ -432,8 +435,8 @@ with tab_encuesta:
 
             if btn_sub_enc:
                 try:
-                    # Leer datos actuales de Google Sheets
-                    df_actual = conn.read(ttl=0)
+                    # Leer datos actuales
+                    df_actual = conn.read(spreadsheet=URL_SHEET, ttl=0)
                     
                     # Estructurar la nueva respuesta
                     nueva_fila = pd.DataFrame([{
@@ -444,10 +447,14 @@ with tab_encuesta:
                         "Comentarios": comentarios
                     }])
                     
-                    # Concatenar y actualizar la hoja en la nube
-                    df_actualizado = pd.concat([df_actual, nueva_fila], ignore_index=True)
-                    conn.update(data=df_actualizado)
+                    # Limpiar nulos si la hoja está nueva
+                    if df_actual is None or df_actual.empty:
+                        df_actualizado = nueva_fila
+                    else:
+                        df_actualizado = pd.concat([df_actual, nueva_fila], ignore_index=True)
                     
+                    # Actualizar hoja
+                    conn.update(spreadsheet=URL_SHEET, data=df_actualizado)
                     st.success("¡Excelente! Tu calificación ha sido registrada en Google Sheets en tiempo real.")
                     st.rerun()
                 except Exception as e:
@@ -457,38 +464,44 @@ with tab_encuesta:
         st.markdown("#### **Resultados Acumulados en Tiempo Real**")
         
         try:
-            # Consultar datos en vivo
-            df_respuestas = conn.read(ttl=0)
-            total_respuestas = len(df_respuestas)
+            # Consultar datos en vivo especificando la URL
+            df_respuestas = conn.read(spreadsheet=URL_SHEET, ttl=0)
+            
+            if df_respuestas is not None and not df_respuestas.empty:
+                # Filtrar filas vacías si las hay
+                df_respuestas = df_respuestas.dropna(subset=["Facilidad_Uso"])
+                total_respuestas = len(df_respuestas)
 
-            st.metric("Total de Usuarios Encuestados", f"{total_respuestas} respuestas")
+                st.metric("Total de Usuarios Encuestados", f"{total_respuestas} respuestas")
 
-            if total_respuestas > 0:
-                prom_q1 = df_respuestas["Facilidad_Uso"].mean()
-                prom_q2 = df_respuestas["Claridad_CAR_SDA"].mean()
-                prom_q3 = df_respuestas["Calidad_Word"].mean()
+                if total_respuestas > 0:
+                    prom_q1 = pd.to_numeric(df_respuestas["Facilidad_Uso"]).mean()
+                    prom_q2 = pd.to_numeric(df_respuestas["Claridad_CAR_SDA"]).mean()
+                    prom_q3 = pd.to_numeric(df_respuestas["Calidad_Word"]).mean()
 
-                categorias = ["Facilidad Uso", "Claridad CAR/SDA", "Documento Word"]
-                puntajes = [round(prom_q1, 2), round(prom_q2, 2), round(prom_q3, 2)]
+                    categorias = ["Facilidad Uso", "Claridad CAR/SDA", "Documento Word"]
+                    puntajes = [round(prom_q1, 2), round(prom_q2, 2), round(prom_q3, 2)]
 
-                # Gráfico con promedios reales de Google Sheets
-                fig, ax = plt.subplots(figsize=(6, 4))
-                fig.patch.set_facecolor('#FFFFFF')
-                ax.set_facecolor('#FFFFFF')
+                    # Gráfico con promedios reales
+                    fig, ax = plt.subplots(figsize=(6, 4))
+                    fig.patch.set_facecolor('#FFFFFF')
+                    ax.set_facecolor('#FFFFFF')
 
-                bars = ax.barh(categorias, puntajes, color='#2E7D32', height=0.5)
-                ax.set_xlim(0, 5)
-                ax.set_xlabel("Promedio Real en la Nube (1 a 5)", fontsize=10, color='#6C757D', fontweight='bold')
-                ax.spines['top'].set_visible(False)
-                ax.spines['right'].set_visible(False)
+                    bars = ax.barh(categorias, puntajes, color='#2E7D32', height=0.5)
+                    ax.set_xlim(0, 5)
+                    ax.set_xlabel("Promedio Real en la Nube (1 a 5)", fontsize=10, color='#6C757D', fontweight='bold')
+                    ax.spines['top'].set_visible(False)
+                    ax.spines['right'].set_visible(False)
 
-                for bar in bars:
-                    w = bar.get_width()
-                    ax.text(w - 0.4, bar.get_y() + bar.get_height()/2, f"{w:.1f}", 
-                            va='center', color='white', fontweight='bold', fontsize=10)
+                    for bar in bars:
+                        w = bar.get_width()
+                        ax.text(w - 0.4, bar.get_y() + bar.get_height()/2, f"{w:.1f}", 
+                                va='center', color='white', fontweight='bold', fontsize=10)
 
-                st.pyplot(fig)
+                    st.pyplot(fig)
+                else:
+                    st.info("Aún no hay respuestas guardadas. ¡Sé el primero en calificar!")
             else:
                 st.info("Aún no hay respuestas en la hoja de Google Sheets. ¡Sé el primero en calificar!")
         except Exception as e:
-            st.warning("Escribe el enlace de tu Google Sheet en `.streamlit/secrets.toml` para activar los gráficos en vivo.")
+            st.error(f"No se pudo cargar la vista previa: {e}")

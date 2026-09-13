@@ -17,143 +17,72 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Inyección de CSS estricto para visibilidad de texto
-st.markdown(
-    """
+# Insertar al inicio de app.py para corregir contraste de botones y campos
+st.markdown("""
     <style>
-    /* Fondo Global */
-    .stApp {
-        background-color: #F8F9FA !important;
-    }
-    
-    /* Regla general de forzado de color negro para textos */
-    p, span, label, li, ol, ul, div {
-        color: #212529 !important;
-    }
-
-    h1, h2, h3, h4, h5, h6 {
-        color: #1E4D2B !important;
-        font-weight: 700 !important;
-    }
-
-    /* Ocultar menú de Streamlit */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-
-    /* Sidebar */
-    section[data-testid="stSidebar"] {
-        background-color: #FFFFFF !important;
-        border-right: 1px solid #E9ECEF !important;
-    }
-    section[data-testid="stSidebar"] * {
-        color: #1E4D2B !important;
-    }
-    
-    /* Header Principal */
-    .main-header {
-        background: linear-gradient(135deg, #1E4D2B 0%, #2E7D32 100%);
-        padding: 2rem;
-        border-radius: 14px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        margin-bottom: 2rem;
-    }
-    .main-header h1 {
-        color: #FFFFFF !important;
-        font-weight: 700 !important;
-        margin-bottom: 0.3rem;
-    }
-    .main-header p {
-        color: #E8F5E9 !important;
-        margin: 0;
-    }
-
-    /* Tabs / Pestañas */
-    .stTabs [data-baseweb="tab"] {
-        background-color: #E9ECEF !important;
-        border-radius: 8px;
-        padding: 8px 16px;
-        font-weight: 600;
-        margin-right: 6px;
-    }
-    .stTabs [data-baseweb="tab"] p, .stTabs [data-baseweb="tab"] span {
-        color: #333333 !important;
-    }
-    .stTabs [aria-selected="true"] {
+    /* Estilo para botones principales */
+    .stButton>button, .stFormSubmitButton>button {
         background-color: #2E7D32 !important;
+        color: #FFFFFF !important;
+        font-weight: bold !important;
+        border-radius: 8px !important;
+        border: none !important;
     }
-    .stTabs [aria-selected="true"] p, .stTabs [aria-selected="true"] span {
+    .stButton>button:hover, .stFormSubmitButton>button:hover {
+        background-color: #1B5E20 !important;
         color: #FFFFFF !important;
     }
-
-    /* Targetas KPI */
-    .kpi-card {
-        background-color: #FFFFFF !important;
-        padding: 1.2rem;
-        border-radius: 12px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.06);
-        border-left: 5px solid #2E7D32;
-        text-align: center;
-    }
-    .kpi-title {
-        font-size: 0.85rem;
-        color: #6C757D !important;
-        font-weight: 600;
-        text-transform: uppercase;
-    }
-    .kpi-value {
-        font-size: 1.6rem;
-        font-weight: 700;
-        color: #1E4D2B !important;
-        margin-top: 0.2rem;
-    }
-
-    /* Botones */
-    .stButton>button, .stDownloadButton>button {
-        background: #2E7D32 !important;
-        border-radius: 8px;
-        border: none;
-        padding: 0.5rem 1rem;
-        font-weight: 600;
-        width: 100%;
-    }
-    .stButton>button p, .stDownloadButton>button p {
-        color: #FFFFFF !important;
-    }
-
-    /* Inputs */
-    div[data-baseweb="input"] input, div[data-baseweb="select"] div {
+    
+    /* Estilo para listas desplegables (Selectbox) e inputs */
+    div[data-baseweb="select"] > div {
         background-color: #FFFFFF !important;
         color: #212529 !important;
-        border-radius: 8px !important;
+        border: 1px solid #CED4DA !important;
+    }
+    div[data-baseweb="popover"] {
+        background-color: #FFFFFF !important;
+        color: #212529 !important;
+    }
+    div[role="listbox"] {
+        background-color: #FFFFFF !important;
+        color: #212529 !important;
+    }
+    
+    /* Texto global de la aplicación */
+    body, .stMarkdown, p, span, label {
+        color: #212529 !important;
     }
     </style>
-""",
-    unsafe_allow_html=True,
-)
-
+""", unsafe_allow_html=True)
 # ------------------------------------------------------------------------------
-# 2. BARRA LATERAL (SIDEBAR)
+# BARRA LATERAL (SIDEBAR): LOGO, LEMA E INFORMACIÓN INSTITUCIONAL
 # ------------------------------------------------------------------------------
 with st.sidebar:
-    st.markdown("## 🌿 **ECO REGIÓN**")
-    st.markdown("**Soluciones Ambientales & Licenciamiento**")
-    st.markdown("---")
+    # 1. LOGO DE LA EMPRESA
+    # Asegúrate de guardar la imagen en la misma carpeta de app.py
+    st.image("LOGO.png", use_container_width=True)
 
+    # 2. LEMA O FRASE INSTITUCIONAL
+    # Cambia el texto entre comillas por tu frase exacta
     st.markdown(
         """
-        <div style="background-color: #E8F5E9; padding: 12px; border-radius: 8px; border-left: 4px solid #2E7D32;">
-            <p style="font-weight: bold; color: #1E4D2B !important; margin:0;">🍃 Prototipo MVP v1.2</p>
-            <p style="font-size: 0.85rem; color: #1E4D2B !important; margin:0;">Trámite: Aprovechamiento Forestal</p>
+        <div style="text-align: center; margin-top: -10px; margin-bottom: 15px;">
+            <span style="font-size: 13px; font-style: italic; color: #2E7D32; font-weight: 600;">
+                “Permisos forestales sin complicaciones.”
+            </span>
         </div>
-    """,
-        unsafe_allow_html=True,
+        """, 
+        unsafe_allow_html=True
     )
+    
+    st.divider()
 
-    st.markdown("---")
-    st.markdown("#### ⚙️ **Información del Sistema**")
-    st.caption("Empresa: ECO REGIÓN SAS BIC\n\nDesarrollado para: Reto Universidad-Empresa")
-
-
+    # 3. INFORMACIÓN COMPLEMENTARIA
+    st.markdown("### 📌 **Panel de Control**")
+    st.info("Herramienta oficial para la automatización de salvoconductos y trámites de aprovechamiento forestal.")
+    
+    st.divider()
+    st.caption("🌿 **ECO REGIÓN S.A.S.** | Versión 1.0 MVP")
 # ------------------------------------------------------------------------------
 # 3. ENCABEZADO
 # ------------------------------------------------------------------------------

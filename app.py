@@ -17,40 +17,77 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Insertar al inicio de app.py para corregir contraste de botones y campos
+# Insertar justo después de st.set_page_config(...)
 st.markdown("""
     <style>
-    /* Estilo para botones principales */
+    /* 1. FORZAR FONDO BLANCO Y TEXTO OSCURO EN TODA LA APP */
+    .stApp, [data-testid="stAppViewContainer"], [data-testid="stHeader"] {
+        background-color: #FFFFFF !important;
+        color: #1F2937 !important;
+    }
+    
+    /* 2. BARRA LATERAL (SIDEBAR) EN GRIS MUY CLARO */
+    [data-testid="stSidebar"] {
+        background-color: #F8F9FA !important;
+        border-right: 1px solid #E5E7EB !important;
+    }
+    [data-testid="stSidebar"] * {
+        color: #1F2937 !important;
+    }
+
+    /* 3. TÍTULOS Y TEXTOS SIEMPRE VISIBLES */
+    h1, h2, h3, h4, h5, h6, p, label, span, div, caption {
+        color: #1F2937 !important;
+    }
+    
+    /* Subtítulos y textos secundarios */
+    .stCaption, caption {
+        color: #4B5563 !important;
+    }
+
+    /* 4. CAMPOS DE TEXTO E INPUTS CON FONDO BLANCO Y BORDE DEFINIDO */
+    input, textarea, div[data-baseweb="select"] > div {
+        background-color: #FFFFFF !important;
+        color: #1F2937 !important;
+        border: 1px solid #D1D5DB !important;
+        border-radius: 6px !important;
+    }
+    
+    /* Menús desplegables (Selectbox) */
+    div[data-baseweb="popover"], div[role="listbox"], li[role="option"] {
+        background-color: #FFFFFF !important;
+        color: #1F2937 !important;
+    }
+    li[role="option"]:hover {
+        background-color: #E8F5E9 !important;
+        color: #2E7D32 !important;
+    }
+
+    /* 5. BOTONES PRINCIPALES EN VERDE CORPORATIVO */
     .stButton>button, .stFormSubmitButton>button {
         background-color: #2E7D32 !important;
         color: #FFFFFF !important;
         font-weight: bold !important;
         border-radius: 8px !important;
         border: none !important;
+        padding: 0.5rem 1rem !important;
     }
     .stButton>button:hover, .stFormSubmitButton>button:hover {
         background-color: #1B5E20 !important;
         color: #FFFFFF !important;
     }
-    
-    /* Estilo para listas desplegables (Selectbox) e inputs */
-    div[data-baseweb="select"] > div {
-        background-color: #FFFFFF !important;
-        color: #212529 !important;
-        border: 1px solid #CED4DA !important;
+    .stButton>button *, .stFormSubmitButton>button * {
+        color: #FFFFFF !important;
     }
-    div[data-baseweb="popover"] {
-        background-color: #FFFFFF !important;
-        color: #212529 !important;
+
+    /* 6. PESTAÑAS (TABS) */
+    button[data-baseweb="tab"] {
+        color: #4B5563 !important;
+        font-weight: 600 !important;
     }
-    div[role="listbox"] {
-        background-color: #FFFFFF !important;
-        color: #212529 !important;
-    }
-    
-    /* Texto global de la aplicación */
-    body, .stMarkdown, p, span, label {
-        color: #212529 !important;
+    button[aria-selected="true"] {
+        color: #2E7D32 !important;
+        border-bottom-color: #2E7D32 !important;
     }
     </style>
 """, unsafe_allow_html=True)

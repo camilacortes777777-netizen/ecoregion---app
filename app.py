@@ -7,9 +7,7 @@ import pandas as pd
 import streamlit as st
 from docx import Document
 
-# ------------------------------------------------------------------------------
-# 1. CONFIGURACIÓN Y CSS AVANZADO (PALETA DE COLORES & UI PRO)
-# ------------------------------------------------------------------------------
+
 st.set_page_config(
     page_title="EcoRegión - Soluciones Ambientales",
     page_icon="🌿",
@@ -17,137 +15,107 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Inyección de CSS Profesional
+
 st.markdown(
     """
     <style>
-    /* Importar fuente moderna (Inter) */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
-    
-    html, body, [class*="css"] {
-        font-family: 'Inter', sans-serif;
-        background-color: #F8F9FA;
-        color: #212529;
-    }
-    
-    /* Fondo principal de la App */
+    /* Forzar color de texto global y fondo limpio */
     .stApp {
-        background-color: #F8F9FA;
+        background-color: #F8F9FA !important;
     }
-
-    /* Ocultar barra de menú de Streamlit arriba para aspecto limpio */
+    
+    /* Forzar que todos los textos principales e inputs sean legibles */
+    p, span, label, h1, h2, h3, h4, h5, h6, div {
+        color: #212529 !important;
+    }
+    
+    /* Ocultar menú superior de Streamlit */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
 
-    /* Contenedor del Título Principal */
+    /* Encabezado Principal */
     .main-header {
         background: linear-gradient(135deg, #1E4D2B 0%, #2E7D32 100%);
-        padding: 2.5rem 2rem;
-        border-radius: 16px;
-        color: white;
-        box-shadow: 0 10px 25px rgba(30, 77, 43, 0.15);
+        padding: 2rem;
+        border-radius: 14px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         margin-bottom: 2rem;
     }
     .main-header h1 {
         color: #FFFFFF !important;
         font-weight: 700;
-        font-size: 2.2rem;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.3rem;
     }
     .main-header p {
-        color: #E8F5E9;
-        font-size: 1.05rem;
+        color: #E8F5E9 !important;
         margin: 0;
     }
 
-    /* Tarjetas Métricas Personalizadas (KPI Cards) */
+    /* Pestañas (Tabs) con texto siempre visible */
+    .stTabs [data-baseweb="tab"] {
+        background-color: #E9ECEF !important;
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-weight: 600;
+        color: #333333 !important;
+        margin-right: 6px;
+    }
+    .stTabs [aria-selected="true"] {
+        background-color: #2E7D32 !important;
+        color: #FFFFFF !important;
+    }
+    .stTabs [aria-selected="true"] p {
+        color: #FFFFFF !important;
+    }
+
+    /* Tarjetas Métricas */
     .kpi-card {
-        background-color: #FFFFFF;
-        padding: 1.5rem;
-        border-radius: 14px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        background-color: #FFFFFF !important;
+        padding: 1.2rem;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.06);
         border-left: 5px solid #2E7D32;
         text-align: center;
-        transition: transform 0.2s ease;
-    }
-    .kpi-card:hover {
-        transform: translateY(-3px);
     }
     .kpi-title {
         font-size: 0.85rem;
-        color: #6C757D;
-        text-transform: uppercase;
+        color: #6C757D !important;
         font-weight: 600;
-        letter-spacing: 0.5px;
+        text-transform: uppercase;
     }
     .kpi-value {
-        font-size: 1.8rem;
+        font-size: 1.6rem;
         font-weight: 700;
-        color: #1E4D2B;
-        margin-top: 0.3rem;
+        color: #1E4D2B !important;
+        margin-top: 0.2rem;
     }
 
-    /* Estilizado de Pestañas (Tabs) */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 12px;
-    }
-    .stTabs [data-baseweb="tab"] {
-        background-color: #FFFFFF;
-        border-radius: 10px;
-        padding: 10px 20px;
-        font-weight: 600;
-        color: #495057;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.03);
-        border: 1px solid #E9ECEF;
-    }
-    .stTabs [aria-selected="true"] {
-        background-color: #1E4D2B !important;
-        color: #FFFFFF !important;
-        border-color: #1E4D2B !important;
-    }
-
-    /* Estilizado de Botones */
+    /* Botones principales */
     .stButton>button, .stDownloadButton>button {
-        background: linear-gradient(135deg, #2E7D32 0%, #1E4D2B 100%);
-        color: white !important;
+        background: #2E7D32 !important;
+        color: #FFFFFF !important;
+        border-radius: 8px;
         border: none;
-        border-radius: 10px;
-        padding: 0.6rem 1.5rem;
+        padding: 0.5rem 1rem;
         font-weight: 600;
-        font-size: 1rem;
-        box-shadow: 0 4px 12px rgba(46, 125, 50, 0.25);
-        transition: all 0.3s ease;
         width: 100%;
     }
-    .stButton>button:hover, .stDownloadButton>button:hover {
-        background: linear-gradient(135deg, #1E4D2B 0%, #14371E 100%);
-        box-shadow: 0 6px 18px rgba(30, 77, 43, 0.35);
-        transform: translateY(-1px);
+    .stButton>button p, .stDownloadButton>button p {
+        color: #FFFFFF !important;
     }
 
-    /* Formularios e Inputs */
-    div[data-baseweb="select"] > div, div[data-baseweb="input"] > div {
-        border-radius: 10px !important;
-        border-color: #CED4DA !important;
-    }
-    
-    /* Contenedores con borde fino */
-    .custom-box {
-        background-color: #FFFFFF;
-        padding: 1.5rem;
-        border-radius: 14px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.04);
-        border: 1px solid #E9ECEF;
-        margin-bottom: 1rem;
+    /* Arreglo de Inputs para que no se oscurezcan */
+    div[data-baseweb="input"] input, div[data-baseweb="select"] div {
+        background-color: #FFFFFF !important;
+        color: #212529 !important;
+        border-radius: 8px !important;
     }
     </style>
 """,
     unsafe_allow_html=True,
 )
 
-# ------------------------------------------------------------------------------
-# 2. BARRA LATERAL (SIDEBAR) CORPORATIVA
-# ------------------------------------------------------------------------------
+
 with st.sidebar:
     st.image(
         "https://ecoregionsas.com/wp-content/uploads/2021/04/logo-ecoregion.png",
@@ -157,24 +125,12 @@ with st.sidebar:
     st.markdown("### 🏢 **ECO REGIÓN SAS BIC**")
     st.caption("Soluciones Ambientales & Licenciamiento")
 
-    st.markdown(
-        """
-        <div style="background-color: #E8F5E9; padding: 12px; border-radius: 10px; border-left: 4px solid #2E7D32; margin-top: 15px;">
-            <span style="color: #1E4D2B; font-weight: 600; font-size: 0.9rem;">🍃 Prototipo MVP v1.2</span><br>
-            <span style="color: #495057; font-size: 0.8rem;">Trámite: Aprovechamiento Forestal de Árboles Aislados</span>
-        </div>
-    """,
-        unsafe_allow_html=True,
-    )
-
-    st.markdown("---")
-    st.markdown("#### ⚙️ **Configuración Rápida**")
-    modo_oscuro_mapa = st.checkbox("Mapa Satelital / Alto Contraste", value=False)
+    st.info("🍃 **Prototipo MVP v1.2**\n\nTrámite: Aprovechamiento Forestal")
 
 
-# ------------------------------------------------------------------------------
-# 3. ENCABEZADO PRINCIPAL (HEADER HERO)
-# ------------------------------------------------------------------------------
+
+
+
 st.markdown(
     """
     <div class="main-header">
@@ -185,22 +141,19 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Pestañas Principales
 tab_app, tab_guia, tab_encuesta = st.tabs(
     [
-        "📋  Formulario de Solicitud",
-        "📖  Guía de Uso del Trámite",
-        "📊  Módulo de Validación & Usabilidad",
+        "📝 Formulario de Solicitud",
+        "📖 Guía de Uso del Trámite",
+        "📊 Módulo de Validación & Usabilidad",
     ]
 )
 
 
-# ------------------------------------------------------------------------------
-# 4. PESTAÑA 1: FORMULARIO INTERACTIVO Y CÁLCULO
-# ------------------------------------------------------------------------------
+
 with tab_app:
     st.markdown("### 📝 Registro del Proyecto Ambiental")
-    st.caption("Diligencie los campos requeridos para estructurar automáticamente el documento técnico de radicación.")
+    st.caption("Diligencie los campos requeridos para estructurar automáticamente el documento técnico.")
 
     with st.form("form_aprovechamiento"):
         col1, col2 = st.columns(2, gap="medium")
@@ -268,7 +221,6 @@ with tab_app:
 
         submit_btn = st.form_submit_button("🔥 Procesar Solicitud y Generar Documentación")
 
-    # Visualización Geográfica y Fotografía
     st.markdown("---")
     col_mapa, col_foto = st.columns(2, gap="medium")
 
@@ -284,17 +236,14 @@ with tab_app:
         else:
             st.info("No se ha adjuntado imagen previa.")
 
-    # Lógica de Procesamiento y Resultados
     if submit_btn or "procesado" in st.session_state:
         st.session_state["procesado"] = True
         st.markdown("---")
 
-        # Cálculos matemáticos
         dap_m = dap_cm / 100.0
         fm_val = float(forma_fuste.split("(")[1].replace(")", ""))
         volumen_m3 = (math.pi / 4) * (dap_m**2) * altura_m * fm_val * cant_arboles
 
-        # KPI CARDS Estilizadas con HTML/CSS
         st.markdown("### 📊 **Resumen Técnico del Procesamiento**")
         kpi1, kpi2, kpi3 = st.columns(3)
 
@@ -314,7 +263,7 @@ with tab_app:
                 f"""
                 <div class="kpi-card" style="border-left-color: #1976D2;">
                     <div class="kpi-title">Jurisdicción Registrada</div>
-                    <div class="kpi-value" style="color: #1976D2;">{jurisdiccion.split()[0]}</div>
+                    <div class="kpi-value" style="color: #1976D2 !important;">{jurisdiccion.split()[0]}</div>
                 </div>
             """,
                 unsafe_allow_html=True,
@@ -327,13 +276,12 @@ with tab_app:
                 f"""
                 <div class="kpi-card" style="border-left-color: {color_riesgo};">
                     <div class="kpi-title">Prioridad Diagnosticada</div>
-                    <div class="kpi-value" style="color: {color_riesgo};">{texto_riesgo}</div>
+                    <div class="kpi-value" style="color: {color_riesgo} !important;">{texto_riesgo}</div>
                 </div>
             """,
                 unsafe_allow_html=True,
             )
 
-        # Reglas Condicionales CAR vs SDA
         st.markdown("<br>", unsafe_allow_html=True)
         st.markdown("#### 📑 **Lista de Chequeo de Anexos Requeridos**")
 
@@ -359,7 +307,6 @@ with tab_app:
         for anexo in anexos_requeridos:
             st.markdown(f"  • {anexo}")
 
-        # Generación del Documento Word
         doc = Document()
         doc.add_heading("SOLICITUD TÉCNICA DE APROVECHAMIENTO FORESTAL", 0)
         doc.add_paragraph(f"Generado a través de EcoRegión App el {datetime.now().strftime('%d/%m/%Y a las %H:%M')}")
@@ -394,33 +341,22 @@ with tab_app:
         )
 
 
-# ------------------------------------------------------------------------------
-# 5. PESTAÑA 2: GUÍA DE USO SENCILLA
-# ------------------------------------------------------------------------------
+
 with tab_guia:
+    st.markdown("### 📖 Guía Rápida para el Diligenciamiento del Trámite")
     st.markdown(
         """
-        <div class="custom-box">
-            <h3>📖 Guía Rápida para el Diligenciamiento del Trámite</h3>
-            <p>Siga estos 4 sencillos pasos para completar su solicitud sin necesidad de asesoría técnica externa:</p>
-            <ol>
-                <li><b>Seleccione la Entidad Ambiental:</b> Si su predio está dentro de Bogotá seleccione <b>SDA</b>. Si está en otros municipios seleccione la <b>CAR</b> respectiva.</li>
-                <li><b>Ingrese las Medidas Dendrométricas:</b> Mida la circunferencia del tronco a la altura de su pecho (DAP) y estime la altura. La app calculará los metros cúbicos (m³) automáticamente.</li>
-                <li><b>Valide los Anexos Automáticos:</b> El sistema identificará los documentos obligatorios (escrituras, libertad y tradición, fotos) según la entidad.</li>
-                <li><b>Descargue y Radique:</b> Al finalizar, haga clic en <i>Descargar Documento Técnico</i> para obtener su plantilla diligenciada lista para entregar.</li>
-            </ol>
-        </div>
-    """,
-        unsafe_allow_html=True,
+        1. **Seleccione la Entidad Ambiental:** Si su predio está dentro de Bogotá seleccione **SDA**. Si está en otros municipios seleccione la **CAR** respectiva.
+        2. **Ingrese las Medidas Dendrométricas:** Mida la circunferencia del tronco a la altura de su pecho (DAP) y estime la altura. La app calculará los metros cúbicos (m³) automáticamente.
+        3. **Valide los Anexos Automáticos:** El sistema identificará los documentos obligatorios (escrituras, libertad y tradición, fotos) según la entidad.
+        4. **Descargue y Radique:** Al finalizar, haga clic en *Descargar Documento Técnico* para obtener su plantilla diligenciada lista para entregar.
+    """
     )
 
 
-# ------------------------------------------------------------------------------
-# 6. PESTAÑA 3: ENCUESTA & ESTADÍSTICAS GRÁFICAS
-# ------------------------------------------------------------------------------
+
 with tab_encuesta:
     st.markdown("### 📊 Validación de Usabilidad con Usuarios Reales")
-    st.caption("Resultados del instrumento de evaluación aplicado al grupo controlado para medir la viabilidad del MVP.")
 
     col_e1, col_e2 = st.columns([1, 1], gap="medium")
 
@@ -439,7 +375,6 @@ with tab_encuesta:
     with col_e2:
         st.markdown("#### **Resultados Consolidados (Escala Likert)**")
 
-        # Gráfico elegante estilizado con la paleta de colores
         categorias = ["Facilidad Uso", "Claridad CAR/SDA", "Documento Word", "Cálculo m³"]
         puntajes = [4.8, 4.6, 4.9, 5.0]
 
@@ -452,8 +387,6 @@ with tab_encuesta:
         ax.set_xlabel("Puntaje Promedio (1 a 5)", fontsize=10, color="#6C757D", fontweight="bold")
         ax.spines["top"].set_visible(False)
         ax.spines["right"].set_visible(False)
-        ax.spines["left"].set_color("#CED4DA")
-        ax.spines["bottom"].set_color("#CED4DA")
 
         for bar in bars:
             w = bar.get_width()

@@ -407,52 +407,88 @@ with tab_guia:
     )
 
 
+from streamlit_gsheets import GSheetsConnection
+
 # ------------------------------------------------------------------------------
-# 6. PESTAÑA 3: ENCUESTA
+# 6. PESTAÑA 3: ENCUESTA CONECTADA A GOOGLE SHEETS
 # ------------------------------------------------------------------------------
 with tab_encuesta:
     st.markdown("### 📊 Validación de Usabilidad con Usuarios Reales")
+    st.caption("Las respuestas registradas se guardan en tiempo real en nuestra base de datos de Google Sheets.")
 
     col_e1, col_e2 = st.columns([1, 1], gap="medium")
+
+    # Conexión con Google Sheets
+    conn = st.connection("gsheets", type=GSheetsConnection)
 
     with col_e1:
         with st.form("form_encuesta_val"):
             st.markdown("#### **Formulario de Retroalimentación**")
-            q1 = st.slider("Facilidad de diligenciamiento del formulario", 1, 5, 5)
-            q2 = st.slider("Claridad en la diferencia CAR vs. SDA", 1, 5, 5)
-            q3 = st.slider("Calidad y utilidad del documento Word generado", 1, 5, 5)
+            q1 = st.slider("1. Facilidad de diligenciamiento del formulario", 1, 5, 5)
+            q2 = st.slider("2. Claridad en la diferencia CAR vs. SDA", 1, 5, 5)
+            q3 = st.slider("3. Calidad y utilidad del documento Word generado", 1, 5, 5)
             comentarios = st.text_area("Sugerencias o comentarios adicionales:")
-            btn_sub_enc = st.form_submit_button("Enviar Evaluación")
+            btn_sub_enc = st.form_submit_button("☁️ Enviar a Google Sheets")
 
             if btn_sub_enc:
-                st.success("¡Muchas gracias! Su calificación ha sido registrada con éxito.")
+                try:
+                    # Leer datos actuales de Google Sheets
+                    df_actual = conn.read(ttl=0)
+                    
+                    # Estructurar la nueva respuesta
+                    nueva_fila = pd.DataFrame([{
+                        "Fecha": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        "Facilidad_Uso": q1,
+                        "Claridad_CAR_SDA": q2,
+                        "Calidad_Word": q3,
+                        "Comentarios": comentarios
+                    }])
+                    
+                    # Concatenar y actualizar la hoja en la nube
+                    df_actualizado = pd.concat([df_actual, nueva_fila], ignore_index=True)
+                    conn.update(data=df_actualizado)
+                    
+                    st.success("¡Excelente! Tu calificación ha sido registrada en Google Sheets en tiempo real.")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Error al conectar con Google Sheets: {e}")
 
     with col_e2:
-        st.markdown("#### **Resultados Consolidados (Escala Likert)**")
+        st.markdown("#### **Resultados Acumulados en Tiempo Real**")
+        
+        try:
+            # Consultar datos en vivo
+            df_respuestas = conn.read(ttl=0)
+            total_respuestas = len(df_respuestas)
 
-        categorias = ["Facilidad Uso", "Claridad CAR/SDA", "Documento Word", "Cálculo m³"]
-        puntajes = [4.8, 4.6, 4.9, 5.0]
+            st.metric("Total de Usuarios Encuestados", f"{total_respuestas} respuestas")
 
-        fig, ax = plt.subplots(figsize=(6, 4.2))
-        fig.patch.set_facecolor("#FFFFFF")
-        ax.set_facecolor("#FFFFFF")
+            if total_respuestas > 0:
+                prom_q1 = df_respuestas["Facilidad_Uso"].mean()
+                prom_q2 = df_respuestas["Claridad_CAR_SDA"].mean()
+                prom_q3 = df_respuestas["Calidad_Word"].mean()
 
-        bars = ax.barh(categorias, puntajes, color="#2E7D32", height=0.55)
-        ax.set_xlim(0, 5)
-        ax.set_xlabel("Puntaje Promedio (1 a 5)", fontsize=10, color="#6C757D", fontweight="bold")
-        ax.spines["top"].set_visible(False)
-        ax.spines["right"].set_visible(False)
+                categorias = ["Facilidad Uso", "Claridad CAR/SDA", "Documento Word"]
+                puntajes = [round(prom_q1, 2), round(prom_q2, 2), round(prom_q3, 2)]
 
-        for bar in bars:
-            w = bar.get_width()
-            ax.text(
-                w - 0.45,
-                bar.get_y() + bar.get_height() / 2,
-                f"{w}",
-                va="center",
-                color="white",
-                fontweight="bold",
-                fontsize=10,
-            )
+                # Gráfico con promedios reales de Google Sheets
+                fig, ax = plt.subplots(figsize=(6, 4))
+                fig.patch.set_facecolor('#FFFFFF')
+                ax.set_facecolor('#FFFFFF')
 
-        st.pyplot(fig)
+                bars = ax.barh(categorias, puntajes, color='#2E7D32', height=0.5)
+                ax.set_xlim(0, 5)
+                ax.set_xlabel("Promedio Real en la Nube (1 a 5)", fontsize=10, color='#6C757D', fontweight='bold')
+                ax.spines['top'].set_visible(False)
+                ax.spines['right'].set_visible(False)
+
+                for bar in bars:
+                    w = bar.get_width()
+                    ax.text(w - 0.4, bar.get_y() + bar.get_height()/2, f"{w:.1f}", 
+                            va='center', color='white', fontweight='bold', fontsize=10)
+
+                st.pyplot(fig)
+            else:
+                st.info("Aún no hay respuestas en la hoja de Google Sheets. ¡Sé el primero en calificar!")
+        except Exception as e:
+            st.warning("Escribe el enlace de tu Google Sheet en `.streamlit/secrets.toml` para activar los gráficos en vivo.")

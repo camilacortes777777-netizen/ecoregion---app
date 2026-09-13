@@ -2,3 +2,4 @@ streamlit
 python-docx
 pandas
 matplotlib
+st-gsheets-connection

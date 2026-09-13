@@ -375,20 +375,24 @@ with tab_guia:
 
 from streamlit_gsheets import GSheetsConnection
 
+import os
+
 # ------------------------------------------------------------------------------
-# 6. PESTAÑA 3: ENCUESTA CONECTADA A GOOGLE SHEETS
+# 6. PESTAÑA 3: ENCUESTA CON BASE DE DATOS LOCAL/SERVIDO Y GRÁFICOS EN VIVO
 # ------------------------------------------------------------------------------
 with tab_encuesta:
     st.markdown("### 📊 Validación de Usabilidad con Usuarios Reales")
-    st.caption("Las respuestas registradas se guardan en tiempo real en nuestra base de datos de Google Sheets.")
-
-    # PEGA AQUÍ TU ENLACE REAL DE GOOGLE SHEETS
-    URL_SHEET = "https://docs.google.com/spreadsheets/d/17rVqZExih7E-dhfE3Vg_4tNqlTx5gCg5azDvzerys94/edit?usp=sharing"
+    st.caption("Las respuestas registradas se guardan automáticamente en la base de datos de encuestas.")
 
     col_e1, col_e2 = st.columns([1, 1], gap="medium")
 
-    # Inicializar conexión
-    conn = st.connection("gsheets", type=GSheetsConnection)
+    # Archivo de base de datos de respuestas
+    CSV_ENCUESTAS = "respuestas_encuesta.csv"
+
+    # Si el archivo no existe, lo inicializamos con los encabezados
+    if not os.path.exists(CSV_ENCUESTAS):
+        df_init = pd.DataFrame(columns=["Fecha", "Facilidad_Uso", "Claridad_CAR_SDA", "Calidad_Word", "Comentarios"])
+        df_init.to_csv(CSV_ENCUESTAS, index=False)
 
     with col_e1:
         with st.form("form_encuesta_val"):
@@ -397,77 +401,67 @@ with tab_encuesta:
             q2 = st.slider("2. Claridad en la diferencia CAR vs. SDA", 1, 5, 5)
             q3 = st.slider("3. Calidad y utilidad del documento Word generado", 1, 5, 5)
             comentarios = st.text_area("Sugerencias o comentarios adicionales:")
-            btn_sub_enc = st.form_submit_button("☁️ Enviar a Google Sheets")
+            btn_sub_enc = st.form_submit_button("💾 Guardar Mi Respuesta")
 
             if btn_sub_enc:
-                try:
-                    # Leer datos actuales
-                    df_actual = conn.read(spreadsheet=URL_SHEET, ttl=0)
-                    
-                    # Estructurar la nueva respuesta
-                    nueva_fila = pd.DataFrame([{
-                        "Fecha": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                        "Facilidad_Uso": q1,
-                        "Claridad_CAR_SDA": q2,
-                        "Calidad_Word": q3,
-                        "Comentarios": comentarios
-                    }])
-                    
-                    # Limpiar nulos si la hoja está nueva
-                    if df_actual is None or df_actual.empty:
-                        df_actualizado = nueva_fila
-                    else:
-                        df_actualizado = pd.concat([df_actual, nueva_fila], ignore_index=True)
-                    
-                    # Actualizar hoja
-                    conn.update(spreadsheet=URL_SHEET, data=df_actualizado)
-                    st.success("¡Excelente! Tu calificación ha sido registrada en Google Sheets en tiempo real.")
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Error al conectar con Google Sheets: {e}")
+                # Crear nueva fila con la respuesta
+                nueva_respuesta = pd.DataFrame([{
+                    "Fecha": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "Facilidad_Uso": q1,
+                    "Claridad_CAR_SDA": q2,
+                    "Calidad_Word": q3,
+                    "Comentarios": comentarios
+                }])
+                
+                # Guardar respuesta en la base de datos
+                nueva_respuesta.to_csv(CSV_ENCUESTAS, mode='a', header=False, index=False)
+                st.success("¡Muchas gracias! Tu respuesta ha sido guardada en la base de datos.")
+                st.rerun()  # Recargar pantalla para refrescar el gráfico dinámico
 
     with col_e2:
         st.markdown("#### **Resultados Acumulados en Tiempo Real**")
         
-        try:
-            # Consultar datos en vivo especificando la URL
-            df_respuestas = conn.read(spreadsheet=URL_SHEET, ttl=0)
-            
-            if df_respuestas is not None and not df_respuestas.empty:
-                # Filtrar filas vacías si las hay
-                df_respuestas = df_respuestas.dropna(subset=["Facilidad_Uso"])
-                total_respuestas = len(df_respuestas)
+        # Leer respuestas registradas
+        if os.path.exists(CSV_ENCUESTAS):
+            df_respuestas = pd.read_csv(CSV_ENCUESTAS)
+            total_respuestas = len(df_respuestas)
 
-                st.metric("Total de Usuarios Encuestados", f"{total_respuestas} respuestas")
+            st.metric("Total de Usuarios Encuestados", f"{total_respuestas} respuestas")
 
-                if total_respuestas > 0:
-                    prom_q1 = pd.to_numeric(df_respuestas["Facilidad_Uso"]).mean()
-                    prom_q2 = pd.to_numeric(df_respuestas["Claridad_CAR_SDA"]).mean()
-                    prom_q3 = pd.to_numeric(df_respuestas["Calidad_Word"]).mean()
+            if total_respuestas > 0:
+                # Promedios reales
+                prom_q1 = pd.to_numeric(df_respuestas["Facilidad_Uso"]).mean()
+                prom_q2 = pd.to_numeric(df_respuestas["Claridad_CAR_SDA"]).mean()
+                prom_q3 = pd.to_numeric(df_respuestas["Calidad_Word"]).mean()
 
-                    categorias = ["Facilidad Uso", "Claridad CAR/SDA", "Documento Word"]
-                    puntajes = [round(prom_q1, 2), round(prom_q2, 2), round(prom_q3, 2)]
+                categorias = ["Facilidad Uso", "Claridad CAR/SDA", "Documento Word"]
+                puntajes = [round(prom_q1, 2), round(prom_q2, 2), round(prom_q3, 2)]
 
-                    # Gráfico con promedios reales
-                    fig, ax = plt.subplots(figsize=(6, 4))
-                    fig.patch.set_facecolor('#FFFFFF')
-                    ax.set_facecolor('#FFFFFF')
+                # Gráfico en tiempo real
+                fig, ax = plt.subplots(figsize=(6, 4))
+                fig.patch.set_facecolor('#FFFFFF')
+                ax.set_facecolor('#FFFFFF')
 
-                    bars = ax.barh(categorias, puntajes, color='#2E7D32', height=0.5)
-                    ax.set_xlim(0, 5)
-                    ax.set_xlabel("Promedio Real en la Nube (1 a 5)", fontsize=10, color='#6C757D', fontweight='bold')
-                    ax.spines['top'].set_visible(False)
-                    ax.spines['right'].set_visible(False)
+                bars = ax.barh(categorias, puntajes, color='#2E7D32', height=0.5)
+                ax.set_xlim(0, 5)
+                ax.set_xlabel("Promedio Real (1 a 5)", fontsize=10, color='#6C757D', fontweight='bold')
+                ax.spines['top'].set_visible(False)
+                ax.spines['right'].set_visible(False)
 
-                    for bar in bars:
-                        w = bar.get_width()
-                        ax.text(w - 0.4, bar.get_y() + bar.get_height()/2, f"{w:.1f}", 
-                                va='center', color='white', fontweight='bold', fontsize=10)
+                for bar in bars:
+                    w = bar.get_width()
+                    ax.text(w - 0.4, bar.get_y() + bar.get_height()/2, f"{w:.1f}", 
+                            va='center', color='white', fontweight='bold', fontsize=10)
 
-                    st.pyplot(fig)
-                else:
-                    st.info("Aún no hay respuestas guardadas. ¡Sé el primero en calificar!")
+                st.pyplot(fig)
+
+                # Botón para descargar el reporte de respuestas
+                csv_data = df_respuestas.to_csv(index=False).encode('utf-8')
+                st.download_button(
+                    label="📥 Descargar Base de Datos de Encuestas (.csv)",
+                    data=csv_data,
+                    file_name="Reporte_Respuestas_Encuesta_EcoRegion.csv",
+                    mime="text/csv",
+                )
             else:
-                st.info("Aún no hay respuestas en la hoja de Google Sheets. ¡Sé el primero en calificar!")
-        except Exception as e:
-            st.error(f"No se pudo cargar la vista previa: {e}")
+                st.info("Aún no hay respuestas registradas en el sistema. ¡Sé el primero en calificar!")

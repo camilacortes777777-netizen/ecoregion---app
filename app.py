@@ -379,8 +379,10 @@ import os
 
 import os
 
+import os
+
 # ------------------------------------------------------------------------------
-# 6. PESTAÑA 3: ENCUESTA OPTIMIZADA PARA EXCEL (SEPARADO EN CELDAS)
+# 6. PESTAÑA 3: ENCUESTA CON CONTROL DE ERRORES Y MULTI-FORMATO CSV
 # ------------------------------------------------------------------------------
 with tab_encuesta:
     st.markdown("### 📊 Validación de Usabilidad con Usuarios Reales")
@@ -391,7 +393,7 @@ with tab_encuesta:
     # Archivo de base de datos
     CSV_ENCUESTAS = "respuestas_encuesta.csv"
 
-    # Inicializar con punto y coma (;) para que Excel reconozca cada celda por separado
+    # Si el archivo no existe, lo creamos con separador punto y coma (;)
     if not os.path.exists(CSV_ENCUESTAS):
         df_init = pd.DataFrame(columns=["Fecha", "Facilidad_Uso", "Claridad_CAR_SDA", "Calidad_Word", "Comentarios"])
         df_init.to_csv(CSV_ENCUESTAS, sep=";", index=False, encoding="utf-8-sig")
@@ -406,7 +408,6 @@ with tab_encuesta:
             btn_sub_enc = st.form_submit_button("💾 Guardar Mi Respuesta")
 
             if btn_sub_enc:
-                # Crear nueva fila de respuesta
                 nueva_respuesta = pd.DataFrame([{
                     "Fecha": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     "Facilidad_Uso": q1,
@@ -415,8 +416,16 @@ with tab_encuesta:
                     "Comentarios": comentarios
                 }])
                 
-                # Guardar respuesta separada por punto y coma (;)
-                nueva_respuesta.to_csv(CSV_ENCUESTAS, mode='a', sep=";", header=False, index=False, encoding="utf-8-sig")
+                # Si el archivo era del formato viejo, se sobrescribe con el nuevo formato de punto y coma
+                try:
+                    df_existente = pd.read_csv(CSV_ENCUESTAS, sep=";", encoding="utf-8-sig")
+                    if "Facilidad_Uso" not in df_existente.columns:
+                        nueva_respuesta.to_csv(CSV_ENCUESTAS, sep=";", index=False, encoding="utf-8-sig")
+                    else:
+                        nueva_respuesta.to_csv(CSV_ENCUESTAS, mode='a', sep=";", header=False, index=False, encoding="utf-8-sig")
+                except Exception:
+                    nueva_respuesta.to_csv(CSV_ENCUESTAS, sep=";", index=False, encoding="utf-8-sig")
+
                 st.success("¡Muchas gracias! Tu respuesta ha sido registrada correctamente.")
                 st.rerun()
 
@@ -424,45 +433,56 @@ with tab_encuesta:
         st.markdown("#### **Resultados Acumulados en Tiempo Real**")
         
         if os.path.exists(CSV_ENCUESTAS):
-            # Leer el archivo indicando el separador de punto y coma (;)
-            df_respuestas = pd.read_csv(CSV_ENCUESTAS, sep=";", encoding="utf-8-sig")
-            total_respuestas = len(df_respuestas)
+            try:
+                # Intentar leer primero con punto y coma (;)
+                df_respuestas = pd.read_csv(CSV_ENCUESTAS, sep=";", encoding="utf-8-sig")
+                
+                # Si por alguna razón leyó con comas (,), reintentar con coma
+                if "Facilidad_Uso" not in df_respuestas.columns:
+                    df_respuestas = pd.read_csv(CSV_ENCUESTAS, sep=",", encoding="utf-8-sig")
+                
+                # Limpiar espacio en blanco de nombres de columnas
+                df_respuestas.columns = df_respuestas.columns.str.strip()
 
-            st.metric("Total de Usuarios Encuestados", f"{total_respuestas} respuestas")
+                if "Facilidad_Uso" in df_respuestas.columns:
+                    total_respuestas = len(df_respuestas)
+                    st.metric("Total de Usuarios Encuestados", f"{total_respuestas} respuestas")
 
-            if total_respuestas > 0:
-                prom_q1 = pd.to_numeric(df_respuestas["Facilidad_Uso"]).mean()
-                prom_q2 = pd.to_numeric(df_respuestas["Claridad_CAR_SDA"]).mean()
-                prom_q3 = pd.to_numeric(df_respuestas["Calidad_Word"]).mean()
+                    if total_respuestas > 0:
+                        prom_q1 = pd.to_numeric(df_respuestas["Facilidad_Uso"], errors='coerce').mean()
+                        prom_q2 = pd.to_numeric(df_respuestas["Claridad_CAR_SDA"], errors='coerce').mean()
+                        prom_q3 = pd.to_numeric(df_respuestas["Calidad_Word"], errors='coerce').mean()
 
-                categorias = ["Facilidad Uso", "Claridad CAR/SDA", "Documento Word"]
-                puntajes = [round(prom_q1, 2), round(prom_q2, 2), round(prom_q3, 2)]
+                        categorias = ["Facilidad Uso", "Claridad CAR/SDA", "Documento Word"]
+                        puntajes = [round(prom_q1, 2), round(prom_q2, 2), round(prom_q3, 2)]
 
-                # Gráfico interactivo
-                fig, ax = plt.subplots(figsize=(6, 4))
-                fig.patch.set_facecolor('#FFFFFF')
-                ax.set_facecolor('#FFFFFF')
+                        fig, ax = plt.subplots(figsize=(6, 4))
+                        fig.patch.set_facecolor('#FFFFFF')
+                        ax.set_facecolor('#FFFFFF')
 
-                bars = ax.barh(categorias, puntajes, color='#2E7D32', height=0.5)
-                ax.set_xlim(0, 5)
-                ax.set_xlabel("Promedio Real (1 a 5)", fontsize=10, color='#6C757D', fontweight='bold')
-                ax.spines['top'].set_visible(False)
-                ax.spines['right'].set_visible(False)
+                        bars = ax.barh(categorias, puntajes, color='#2E7D32', height=0.5)
+                        ax.set_xlim(0, 5)
+                        ax.set_xlabel("Promedio Real (1 a 5)", fontsize=10, color='#6C757D', fontweight='bold')
+                        ax.spines['top'].set_visible(False)
+                        ax.spines['right'].set_visible(False)
 
-                for bar in bars:
-                    w = bar.get_width()
-                    ax.text(w - 0.4, bar.get_y() + bar.get_height()/2, f"{w:.1f}", 
-                            va='center', color='white', fontweight='bold', fontsize=10)
+                        for bar in bars:
+                            w = bar.get_width()
+                            ax.text(w - 0.4, bar.get_y() + bar.get_height()/2, f"{w:.1f}", 
+                                    va='center', color='white', fontweight='bold', fontsize=10)
 
-                st.pyplot(fig)
+                        st.pyplot(fig)
 
-                # Botón para descargar el reporte listo para abrir directamente en Excel
-                csv_excel = df_respuestas.to_csv(sep=";", index=False, encoding="utf-8-sig").encode("utf-8-sig")
-                st.download_button(
-                    label="📥 Descargar Reporte para Excel (.csv)",
-                    data=csv_excel,
-                    file_name="Reporte_Respuestas_Encuesta_EcoRegion.csv",
-                    mime="text/csv",
-                )
-            else:
-                st.info("Aún no hay respuestas registradas. ¡Sé el primero en calificar!")
+                        csv_excel = df_respuestas.to_csv(sep=";", index=False, encoding="utf-8-sig").encode("utf-8-sig")
+                        st.download_button(
+                            label="📥 Descargar Reporte para Excel (.csv)",
+                            data=csv_excel,
+                            file_name="Reporte_Respuestas_Encuesta_EcoRegion.csv",
+                            mime="text/csv",
+                        )
+                    else:
+                        st.info("Aún no hay respuestas registradas. ¡Sé el primero en calificar!")
+                else:
+                    st.info("Inicializando base de datos... Envíe una primera respuesta para comenzar.")
+            except Exception as e:
+                st.info("Iniciando registro de encuestas. Por favor, registre la primera respuesta.")

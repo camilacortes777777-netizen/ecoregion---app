@@ -8,7 +8,7 @@ import streamlit as st
 from docx import Document
 
 # ------------------------------------------------------------------------------
-# 1. CONFIGURACIÓN Y CSS DE ALTA VISIBILIDAD
+# 1. CONFIGURACIÓN Y CSS GLOBAL DE ALTA VISIBILIDAD
 # ------------------------------------------------------------------------------
 st.set_page_config(
     page_title="EcoRegión - Soluciones Ambientales",
@@ -17,51 +17,39 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# CSS forzado para Tema Claro en toda la interfaz (incluida la Sidebar)
+# Inyección de CSS estricto para visibilidad de texto
 st.markdown(
     """
     <style>
-    /* 1. Fondo Global Claro */
+    /* Fondo Global */
     .stApp {
         background-color: #F8F9FA !important;
     }
     
-    /* 2. FORZAR ESTILOS DE LA BARRA LATERAL (SIDEBAR) */
-    section[data-testid="stSidebar"] {
-        background-color: #FFFFFF !important;
-        border-right: 1px solid #E9ECEF !important;
-    }
-    section[data-testid="stSidebar"] *, section[data-testid="stSidebar"] p, section[data-testid="stSidebar"] span {
-        color: #1E4D2B !important;
-    }
-    section[data-testid="stSidebar"] h1, section[data-testid="stSidebar"] h2, section[data-testid="stSidebar"] h3 {
-        color: #1E4D2B !important;
-        font-weight: 700 !important;
-    }
-    
-    /* Caja de info en el sidebar */
-    .sidebar-info-box {
-        background-color: #E8F5E9 !important;
-        padding: 14px !important;
-        border-radius: 10px !important;
-        border-left: 5px solid #2E7D32 !important;
-        margin-top: 15px !important;
-    }
-    .sidebar-info-box p, .sidebar-info-box span {
-        color: #1E4D2B !important;
-        margin: 0 !important;
+    /* Regla general de forzado de color negro para textos */
+    p, span, label, li, ol, ul, div {
+        color: #212529 !important;
     }
 
-    /* 3. Textos y Contenido Principal */
-    p, span, label, h1, h2, h3, h4, h5, h6 {
-        color: #212529 !important;
+    h1, h2, h3, h4, h5, h6 {
+        color: #1E4D2B !important;
+        font-weight: 700 !important;
     }
 
     /* Ocultar menú de Streamlit */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
 
-    /* Encabezado Principal */
+    /* Sidebar */
+    section[data-testid="stSidebar"] {
+        background-color: #FFFFFF !important;
+        border-right: 1px solid #E9ECEF !important;
+    }
+    section[data-testid="stSidebar"] * {
+        color: #1E4D2B !important;
+    }
+    
+    /* Header Principal */
     .main-header {
         background: linear-gradient(135deg, #1E4D2B 0%, #2E7D32 100%);
         padding: 2rem;
@@ -71,7 +59,7 @@ st.markdown(
     }
     .main-header h1 {
         color: #FFFFFF !important;
-        font-weight: 700;
+        font-weight: 700 !important;
         margin-bottom: 0.3rem;
     }
     .main-header p {
@@ -79,7 +67,7 @@ st.markdown(
         margin: 0;
     }
 
-    /* Pestañas (Tabs) */
+    /* Tabs / Pestañas */
     .stTabs [data-baseweb="tab"] {
         background-color: #E9ECEF !important;
         border-radius: 8px;
@@ -87,17 +75,17 @@ st.markdown(
         font-weight: 600;
         margin-right: 6px;
     }
-    .stTabs [data-baseweb="tab"] p {
+    .stTabs [data-baseweb="tab"] p, .stTabs [data-baseweb="tab"] span {
         color: #333333 !important;
     }
     .stTabs [aria-selected="true"] {
         background-color: #2E7D32 !important;
     }
-    .stTabs [aria-selected="true"] p {
+    .stTabs [aria-selected="true"] p, .stTabs [aria-selected="true"] span {
         color: #FFFFFF !important;
     }
 
-    /* Tarjetas Métricas */
+    /* Targetas KPI */
     .kpi-card {
         background-color: #FFFFFF !important;
         padding: 1.2rem;
@@ -132,7 +120,7 @@ st.markdown(
         color: #FFFFFF !important;
     }
 
-    /* Campos de Entrada */
+    /* Inputs */
     div[data-baseweb="input"] input, div[data-baseweb="select"] div {
         background-color: #FFFFFF !important;
         color: #212529 !important;
@@ -144,7 +132,7 @@ st.markdown(
 )
 
 # ------------------------------------------------------------------------------
-# 2. BARRA LATERAL (SIDEBAR LIMPIA Y LEGIBLE)
+# 2. BARRA LATERAL (SIDEBAR)
 # ------------------------------------------------------------------------------
 with st.sidebar:
     st.markdown("## 🌿 **ECO REGIÓN**")
@@ -153,9 +141,9 @@ with st.sidebar:
 
     st.markdown(
         """
-        <div class="sidebar-info-box">
-            <p style="font-weight: bold; font-size: 1rem;">🍃 Prototipo MVP v1.2</p>
-            <p style="font-size: 0.85rem;">Trámite: Aprovechamiento Forestal (Árboles Aislados)</p>
+        <div style="background-color: #E8F5E9; padding: 12px; border-radius: 8px; border-left: 4px solid #2E7D32;">
+            <p style="font-weight: bold; color: #1E4D2B !important; margin:0;">🍃 Prototipo MVP v1.2</p>
+            <p style="font-size: 0.85rem; color: #1E4D2B !important; margin:0;">Trámite: Aprovechamiento Forestal</p>
         </div>
     """,
         unsafe_allow_html=True,
@@ -345,7 +333,7 @@ with tab_app:
             ]
 
         for anexo in anexos_requeridos:
-            st.markdown(f"  • {anexo}")
+            st.write(f"• {anexo}")
 
         doc = Document()
         doc.add_heading("SOLICITUD TÉCNICA DE APROVECHAMIENTO FORESTAL", 0)
@@ -382,16 +370,39 @@ with tab_app:
 
 
 # ------------------------------------------------------------------------------
-# 5. PESTAÑA 2: GUÍA DE USO
+# 5. PESTAÑA 2: GUÍA DE USO (ARREGLADO VISUALMENTE CON NATIVOS DE STREAMLIT)
 # ------------------------------------------------------------------------------
 with tab_guia:
     st.markdown("### 📖 Guía Rápida para el Diligenciamiento del Trámite")
-    st.markdown(
+    st.write(
+        "Siga estos 4 sencillos pasos para completar su solicitud sin necesidad de asesoría técnica externa:"
+    )
+
+    st.info(
         """
-        1. **Seleccione la Entidad Ambiental:** Si su predio está dentro de Bogotá seleccione **SDA**. Si está en otros municipios seleccione la **CAR** respectiva.
-        2. **Ingrese las Medidas Dendrométricas:** Mida la circunferencia del tronco a la altura de su pecho (DAP) y estime la altura. La app calculará los metros cúbicos (m³) automáticamente.
-        3. **Valide los Anexos Automáticos:** El sistema identificará los documentos obligatorios (escrituras, libertad y tradición, fotos) según la entidad.
-        4. **Descargue y Radique:** Al finalizar, haga clic en *Descargar Documento Técnico* para obtener su plantilla diligenciada lista para entregar.
+    **1. Seleccione la Entidad Ambiental:**  
+    Si su predio está dentro de Bogotá D.C. seleccione **SDA**. Si se encuentra en otros municipios de Cundinamarca o Boyacá, seleccione la **CAR** correspondiente.
+    """
+    )
+
+    st.info(
+        """
+    **2. Ingrese las Medidas Dendrométricas:**  
+    Mida el grosor del tronco a la altura de su pecho (DAP en centímetros) y la altura total aproximada en metros. La aplicación calculará los metros cúbicos ($m^3$) automáticamente.
+    """
+    )
+
+    st.info(
+        """
+    **3. Valide los Anexos Automáticos:**  
+    El sistema identificará la lista de chequeo obligatoria (Certificados de Libertad, Fotos de interferencia, Plan de Manejo de Fauna) según la entidad seleccionada.
+    """
+    )
+
+    st.success(
+        """
+    **4. Descargue y Radique:**  
+    Al finalizar, haga clic en **Descargar Documento Técnico** para obtener su archivo estructurado en formato Word (.docx), listo para entregar ante la autoridad ambiental.
     """
     )
 

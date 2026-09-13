@@ -7,7 +7,9 @@ import pandas as pd
 import streamlit as st
 from docx import Document
 
-
+# ------------------------------------------------------------------------------
+# 1. CONFIGURACIÓN Y CSS DE ALTA VISIBILIDAD
+# ------------------------------------------------------------------------------
 st.set_page_config(
     page_title="EcoRegión - Soluciones Ambientales",
     page_icon="🌿",
@@ -15,21 +17,47 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-
+# CSS forzado para Tema Claro en toda la interfaz (incluida la Sidebar)
 st.markdown(
     """
     <style>
-    /* Forzar color de texto global y fondo limpio */
+    /* 1. Fondo Global Claro */
     .stApp {
         background-color: #F8F9FA !important;
     }
     
-    /* Forzar que todos los textos principales e inputs sean legibles */
-    p, span, label, h1, h2, h3, h4, h5, h6, div {
-        color: #212529 !important;
+    /* 2. FORZAR ESTILOS DE LA BARRA LATERAL (SIDEBAR) */
+    section[data-testid="stSidebar"] {
+        background-color: #FFFFFF !important;
+        border-right: 1px solid #E9ECEF !important;
+    }
+    section[data-testid="stSidebar"] *, section[data-testid="stSidebar"] p, section[data-testid="stSidebar"] span {
+        color: #1E4D2B !important;
+    }
+    section[data-testid="stSidebar"] h1, section[data-testid="stSidebar"] h2, section[data-testid="stSidebar"] h3 {
+        color: #1E4D2B !important;
+        font-weight: 700 !important;
     }
     
-    /* Ocultar menú superior de Streamlit */
+    /* Caja de info en el sidebar */
+    .sidebar-info-box {
+        background-color: #E8F5E9 !important;
+        padding: 14px !important;
+        border-radius: 10px !important;
+        border-left: 5px solid #2E7D32 !important;
+        margin-top: 15px !important;
+    }
+    .sidebar-info-box p, .sidebar-info-box span {
+        color: #1E4D2B !important;
+        margin: 0 !important;
+    }
+
+    /* 3. Textos y Contenido Principal */
+    p, span, label, h1, h2, h3, h4, h5, h6 {
+        color: #212529 !important;
+    }
+
+    /* Ocultar menú de Streamlit */
     #MainMenu {visibility: hidden;}
     footer {visibility: hidden;}
 
@@ -51,18 +79,19 @@ st.markdown(
         margin: 0;
     }
 
-    /* Pestañas (Tabs) con texto siempre visible */
+    /* Pestañas (Tabs) */
     .stTabs [data-baseweb="tab"] {
         background-color: #E9ECEF !important;
         border-radius: 8px;
         padding: 8px 16px;
         font-weight: 600;
-        color: #333333 !important;
         margin-right: 6px;
+    }
+    .stTabs [data-baseweb="tab"] p {
+        color: #333333 !important;
     }
     .stTabs [aria-selected="true"] {
         background-color: #2E7D32 !important;
-        color: #FFFFFF !important;
     }
     .stTabs [aria-selected="true"] p {
         color: #FFFFFF !important;
@@ -90,10 +119,9 @@ st.markdown(
         margin-top: 0.2rem;
     }
 
-    /* Botones principales */
+    /* Botones */
     .stButton>button, .stDownloadButton>button {
         background: #2E7D32 !important;
-        color: #FFFFFF !important;
         border-radius: 8px;
         border: none;
         padding: 0.5rem 1rem;
@@ -104,7 +132,7 @@ st.markdown(
         color: #FFFFFF !important;
     }
 
-    /* Arreglo de Inputs para que no se oscurezcan */
+    /* Campos de Entrada */
     div[data-baseweb="input"] input, div[data-baseweb="select"] div {
         background-color: #FFFFFF !important;
         color: #212529 !important;
@@ -115,22 +143,32 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-
+# ------------------------------------------------------------------------------
+# 2. BARRA LATERAL (SIDEBAR LIMPIA Y LEGIBLE)
+# ------------------------------------------------------------------------------
 with st.sidebar:
-    st.image(
-        "https://ecoregionsas.com/wp-content/uploads/2021/04/logo-ecoregion.png",
-        use_container_width=True,
-    )
+    st.markdown("## 🌿 **ECO REGIÓN**")
+    st.markdown("**Soluciones Ambientales & Licenciamiento**")
     st.markdown("---")
-    st.markdown("### 🏢 **ECO REGIÓN SAS BIC**")
-    st.caption("Soluciones Ambientales & Licenciamiento")
 
-    st.info("🍃 **Prototipo MVP v1.2**\n\nTrámite: Aprovechamiento Forestal")
+    st.markdown(
+        """
+        <div class="sidebar-info-box">
+            <p style="font-weight: bold; font-size: 1rem;">🍃 Prototipo MVP v1.2</p>
+            <p style="font-size: 0.85rem;">Trámite: Aprovechamiento Forestal (Árboles Aislados)</p>
+        </div>
+    """,
+        unsafe_allow_html=True,
+    )
+
+    st.markdown("---")
+    st.markdown("#### ⚙️ **Información del Sistema**")
+    st.caption("Empresa: ECO REGIÓN SAS BIC\n\nDesarrollado para: Reto Universidad-Empresa")
 
 
-
-
-
+# ------------------------------------------------------------------------------
+# 3. ENCABEZADO
+# ------------------------------------------------------------------------------
 st.markdown(
     """
     <div class="main-header">
@@ -150,7 +188,9 @@ tab_app, tab_guia, tab_encuesta = st.tabs(
 )
 
 
-
+# ------------------------------------------------------------------------------
+# 4. PESTAÑA 1: FORMULARIO
+# ------------------------------------------------------------------------------
 with tab_app:
     st.markdown("### 📝 Registro del Proyecto Ambiental")
     st.caption("Diligencie los campos requeridos para estructurar automáticamente el documento técnico.")
@@ -341,7 +381,9 @@ with tab_app:
         )
 
 
-
+# ------------------------------------------------------------------------------
+# 5. PESTAÑA 2: GUÍA DE USO
+# ------------------------------------------------------------------------------
 with tab_guia:
     st.markdown("### 📖 Guía Rápida para el Diligenciamiento del Trámite")
     st.markdown(
@@ -354,7 +396,9 @@ with tab_guia:
     )
 
 
-
+# ------------------------------------------------------------------------------
+# 6. PESTAÑA 3: ENCUESTA
+# ------------------------------------------------------------------------------
 with tab_encuesta:
     st.markdown("### 📊 Validación de Usabilidad con Usuarios Reales")
 

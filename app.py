@@ -377,22 +377,24 @@ from streamlit_gsheets import GSheetsConnection
 
 import os
 
+import os
+
 # ------------------------------------------------------------------------------
-# 6. PESTAÑA 3: ENCUESTA CON BASE DE DATOS LOCAL/SERVIDO Y GRÁFICOS EN VIVO
+# 6. PESTAÑA 3: ENCUESTA OPTIMIZADA PARA EXCEL (SEPARADO EN CELDAS)
 # ------------------------------------------------------------------------------
 with tab_encuesta:
     st.markdown("### 📊 Validación de Usabilidad con Usuarios Reales")
-    st.caption("Las respuestas registradas se guardan automáticamente en la base de datos de encuestas.")
+    st.caption("Las respuestas registradas se guardan automáticamente y se exportan ordenadas en celdas para Excel.")
 
     col_e1, col_e2 = st.columns([1, 1], gap="medium")
 
-    # Archivo de base de datos de respuestas
+    # Archivo de base de datos
     CSV_ENCUESTAS = "respuestas_encuesta.csv"
 
-    # Si el archivo no existe, lo inicializamos con los encabezados
+    # Inicializar con punto y coma (;) para que Excel reconozca cada celda por separado
     if not os.path.exists(CSV_ENCUESTAS):
         df_init = pd.DataFrame(columns=["Fecha", "Facilidad_Uso", "Claridad_CAR_SDA", "Calidad_Word", "Comentarios"])
-        df_init.to_csv(CSV_ENCUESTAS, index=False)
+        df_init.to_csv(CSV_ENCUESTAS, sep=";", index=False, encoding="utf-8-sig")
 
     with col_e1:
         with st.form("form_encuesta_val"):
@@ -404,7 +406,7 @@ with tab_encuesta:
             btn_sub_enc = st.form_submit_button("💾 Guardar Mi Respuesta")
 
             if btn_sub_enc:
-                # Crear nueva fila con la respuesta
+                # Crear nueva fila de respuesta
                 nueva_respuesta = pd.DataFrame([{
                     "Fecha": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     "Facilidad_Uso": q1,
@@ -413,23 +415,22 @@ with tab_encuesta:
                     "Comentarios": comentarios
                 }])
                 
-                # Guardar respuesta en la base de datos
-                nueva_respuesta.to_csv(CSV_ENCUESTAS, mode='a', header=False, index=False)
-                st.success("¡Muchas gracias! Tu respuesta ha sido guardada en la base de datos.")
-                st.rerun()  # Recargar pantalla para refrescar el gráfico dinámico
+                # Guardar respuesta separada por punto y coma (;)
+                nueva_respuesta.to_csv(CSV_ENCUESTAS, mode='a', sep=";", header=False, index=False, encoding="utf-8-sig")
+                st.success("¡Muchas gracias! Tu respuesta ha sido registrada correctamente.")
+                st.rerun()
 
     with col_e2:
         st.markdown("#### **Resultados Acumulados en Tiempo Real**")
         
-        # Leer respuestas registradas
         if os.path.exists(CSV_ENCUESTAS):
-            df_respuestas = pd.read_csv(CSV_ENCUESTAS)
+            # Leer el archivo indicando el separador de punto y coma (;)
+            df_respuestas = pd.read_csv(CSV_ENCUESTAS, sep=";", encoding="utf-8-sig")
             total_respuestas = len(df_respuestas)
 
             st.metric("Total de Usuarios Encuestados", f"{total_respuestas} respuestas")
 
             if total_respuestas > 0:
-                # Promedios reales
                 prom_q1 = pd.to_numeric(df_respuestas["Facilidad_Uso"]).mean()
                 prom_q2 = pd.to_numeric(df_respuestas["Claridad_CAR_SDA"]).mean()
                 prom_q3 = pd.to_numeric(df_respuestas["Calidad_Word"]).mean()
@@ -437,7 +438,7 @@ with tab_encuesta:
                 categorias = ["Facilidad Uso", "Claridad CAR/SDA", "Documento Word"]
                 puntajes = [round(prom_q1, 2), round(prom_q2, 2), round(prom_q3, 2)]
 
-                # Gráfico en tiempo real
+                # Gráfico interactivo
                 fig, ax = plt.subplots(figsize=(6, 4))
                 fig.patch.set_facecolor('#FFFFFF')
                 ax.set_facecolor('#FFFFFF')
@@ -455,13 +456,13 @@ with tab_encuesta:
 
                 st.pyplot(fig)
 
-                # Botón para descargar el reporte de respuestas
-                csv_data = df_respuestas.to_csv(index=False).encode('utf-8')
+                # Botón para descargar el reporte listo para abrir directamente en Excel
+                csv_excel = df_respuestas.to_csv(sep=";", index=False, encoding="utf-8-sig").encode("utf-8-sig")
                 st.download_button(
-                    label="📥 Descargar Base de Datos de Encuestas (.csv)",
-                    data=csv_data,
+                    label="📥 Descargar Reporte para Excel (.csv)",
+                    data=csv_excel,
                     file_name="Reporte_Respuestas_Encuesta_EcoRegion.csv",
                     mime="text/csv",
                 )
             else:
-                st.info("Aún no hay respuestas registradas en el sistema. ¡Sé el primero en calificar!")
+                st.info("Aún no hay respuestas registradas. ¡Sé el primero en calificar!")

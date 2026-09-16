@@ -1,5 +1,6 @@
-streamlit
-python-docx
-pandas
-matplotlib
+streamlit>=1.38
+pandas>=2.0
+matplotlib>=3.7
+python-docx>=1.1
+openpyxl>=3.1
 st-gsheets-connection
